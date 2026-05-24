@@ -156,6 +156,23 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
 }));
 
 // ===========================================
+// ROOT ROUTE
+// ===========================================
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'EEEP Backend API is running',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/health',
+      api: '/api',
+      public: '/api/public'
+    }
+  });
+});
+
+// ===========================================
 // HEALTH CHECK
 // ===========================================
 app.get('/health', (req, res) => {
