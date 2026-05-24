@@ -167,7 +167,8 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/health',
       api: '/api',
-      public: '/api/public'
+      public: '/api/public',
+      auth: '/api/auth/login'
     }
   });
 });
@@ -185,6 +186,21 @@ app.get('/health', (req, res) => {
       environment: process.env.NODE_ENV || 'development',
       database: sequelize ? 'connected' : 'disconnected'
     }
+  });
+});
+
+// ===========================================
+// TEST ROUTE FOR DEBUGGING
+// ===========================================
+app.get('/test-auth', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Auth route test successful',
+    availableRoutes: [
+      'POST /api/auth/login',
+      'POST /api/auth/register',
+      'GET /api/auth/me'
+    ]
   });
 });
 
