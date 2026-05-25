@@ -190,6 +190,26 @@ app.get('/health', (req, res) => {
 });
 
 // ===========================================
+// DEBUG DATABASE CONNECTION
+// ===========================================
+app.get('/debug-db', async (req, res) => {
+  try {
+    const [dbName] = await sequelize.query('SELECT current_database() as db_name');
+    const [users] = await sequelize.query('SELECT COUNT(*) as user_count FROM "Users"');
+    const [superadmin] = await sequelize.query('SELECT username, email, LENGTH("passwordHash") as hash_len FROM "Users" WHERE username = \'superadmin\'');
+
+    res.json({
+      database: dbName[0],
+      user_count: users[0].user_count,
+      superadmin: superadmin[0] || null,
+      env: process.env.NODE_ENV
+    });
+  } catch (error) {
+    res.json({ error: error.message });
+  }
+});
+
+// ===========================================
 // TEST ROUTE FOR DEBUGGING
 // ===========================================
 app.get('/test-auth', (req, res) => {
