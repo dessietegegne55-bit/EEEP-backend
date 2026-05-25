@@ -210,6 +210,57 @@ app.get('/debug-db', async (req, res) => {
 });
 
 // ===========================================
+// CREATE SUPERADMIN (PRODUCTION ONLY)
+// ===========================================
+app.post('/create-superadmin', async (req, res) => {
+  try {
+    if (process.env.NODE_ENV !== 'production') {
+      return res.status(403).json({ error: 'Only available in production' });
+    }
+
+    // Check if superadmin already exists
+    const [existing] = await sequelize.query('SELECT id FROM "Users" WHERE username = \'superadmin\'');
+    if (existing.length > 0) {
+      return res.json({ success: false, message: 'Superadmin already exists' });
+    }
+
+    // Create superadmin user
+    const passwordHash = '$2a$10$or.mqUMJF6FoNRx0vZvUp.W.zqmzE8SRC23l7rHpZZvTiboN85HZ6';
+
+    await sequelize.query(`
+      INSERT INTO "Users" (
+        name, email, username, "passwordHash", role, status, 
+        "forcePasswordChange", "isFirstLogin", "createdAt", "updatedAt"
+      ) VALUES (
+        'Super Admin', 'superadmin@eeep.com', 'superadmin', $1, 'superadmin', 'active',
+        false, false, NOW(), NOW()
+      )
+    `, { bind: [passwordHash] });
+
+    // Get the created user ID
+    const [newUser] = await sequelize.query('SELECT id FROM "Users" WHERE username = \'superadmin\'');
+    const userId = newUser[0].id;
+
+    // Create admin record
+    await sequelize.query(`
+      INSERT INTO "Admins" ("userId", "adminType", "createdAt", "updatedAt")
+      VALUES ($1, 'superadmin', NOW(), NOW())
+    `, { bind: [userId] });
+
+    res.json({
+      success: true,
+      message: 'Superadmin created successfully',
+      credentials: {
+        username: 'superadmin',
+        password: 'admin123'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ===========================================
 // TEST ROUTE FOR DEBUGGING
 // ===========================================
 app.get('/test-auth', (req, res) => {
